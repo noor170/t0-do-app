@@ -13,10 +13,23 @@ import { swaggerSpec } from './config/swagger';
 import { apiLimiter } from './middlewares/rate-limiter.middleware';
 import taskRoutes from './routes/task.routes';
 import userRoutes from './routes/user.routes';
+import client from 'prom-client';
 
 const app = express();
 
 initSentry();
+// Collect default metrics (CPU, memory, etc.)
+client.collectDefaultMetrics();
+
+// Expose the metrics endpoint for Prometheus
+app.get('/metrics', async (req, res) => {
+  try {
+    res.setHeader('Content-Type', client.register.contentType);
+    res.send(await client.register.metrics());
+  } catch (ex) {
+    res.status(500).send(ex);
+  }
+});
 
 
 // Security and parsing middleware
