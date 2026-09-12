@@ -14,12 +14,29 @@ import { apiLimiter } from './middlewares/rate-limiter.middleware';
 import taskRoutes from './routes/task.routes';
 import userRoutes from './routes/user.routes';
 import client from 'prom-client';
+import pool from './db'; // Adjust the import path if needed
 
 const app = express();
 
 initSentry();
 // Collect default metrics (CPU, memory, etc.)
 client.collectDefaultMetrics();
+
+// src/app.ts
+app.get('/', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    // Optional: Quick check to ensure DB is responsive
+    await pool.query('SELECT 1');
+    
+    res.status(200).json({ 
+      status: 'success', 
+      message: 'API is running',
+      database: 'connected' 
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Expose the metrics endpoint for Prometheus
 app.get('/metrics', async (req, res) => {

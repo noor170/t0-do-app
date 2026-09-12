@@ -2,6 +2,7 @@ import 'dotenv/config';
 import app from './app';
 import { logger } from './utils/logger';
 
+
 const PORT = process.env.PORT || 5000;
 
 process.on('uncaughtException', (error: Error) => {

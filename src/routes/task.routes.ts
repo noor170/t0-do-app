@@ -1,6 +1,7 @@
 // src/routes/task.routes.ts
 import { Router } from 'express';
 import { cacheMiddleware } from '../middlewares/cache.middleware';
+import pool from '../db';
 import {
   getAllTasks,
   getTaskById,
@@ -14,6 +15,31 @@ import { createTaskSchema, updateTaskSchema } from '../validators/task.schema';
 const router = Router();
 
 router.get('/', cacheMiddleware('tasks', 60), getAllTasks);
+
+router.get('/', async (req, res, next) => {
+  try {
+    const result = await pool.query('SELECT * FROM tasks');
+    res.json({ success: true, data: result.rows });
+  } catch (err) {
+    next(err); // Passes error to your global error handler
+  }
+});
+
+// Example: Inserting data into your local PostgreSQL database
+router.post('/', async (req, res, next) => {
+  try {
+    const { title } = req.body;
+    const result = await pool.query(
+      'INSERT INTO tasks (title) VALUES ($1) RETURNING *',
+      [title]
+    );
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    next(err);
+  }
+});
+
+
 
 /**
  * @swagger
